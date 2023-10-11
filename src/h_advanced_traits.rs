@@ -174,7 +174,6 @@ impl<const DECAY: u32> InternalCombustion<DECAY> {
 
 impl<const DECAY: u32, F: Fuel> ProvideEnergy<F> for InternalCombustion<DECAY> {
     fn provide_energy(&self, f: FuelContainer<F>) -> <F as Fuel>::Output {
-        // Verificar si es necesario reducir la eficiencia
         let mut efficiency = self.0;
         let mut decay_counter = self.1;
 
@@ -185,13 +184,11 @@ impl<const DECAY: u32, F: Fuel> ProvideEnergy<F> for InternalCombustion<DECAY> {
             decay_counter = 0;
         }
 
-        // Incrementar el contador de decaimiento
         let new_decay_counter = decay_counter + 1;
 
-        // Calcular la energía producida usando la eficiencia actual
         let energy = (f.amount as u32) * efficiency as u32;
 
-        InternalCombustion(efficiency, new_decay_counter);
+        InternalCombustion::<DECAY>(efficiency, new_decay_counter);
         energy.into()
     }
 }
@@ -258,15 +255,17 @@ impl<F1: Fuel, F2: Fuel> Fuel for Mixed<F1, F2> {
 // coefficients need to be incorporated in some other way (you've already seen examples of that in
 // this file ;)).
 pub struct CustomMixed<const C: u8, F1, F2>(PhantomData<(F1, F2)>);
-impl<const C: u8, F1: Fuel, F2: Fuel> Fuel for CustomMixed<C, F1, F2> {
-	type Output = BTU;
 
-	fn energy_density() -> Self::Output {
-		let density_f1: BTU = F1::energy_density().into();
+impl<const C: u8, F1: Fuel, F2: Fuel> Fuel for CustomMixed<C, F1, F2> {
+    type Output = BTU;
+
+    fn energy_density() -> Self::Output {
+        let density_f1: BTU = F1::energy_density().into();
         let density_f2: BTU = F2::energy_density().into();
-		let combined_density: u32 = (density_f1 * C as BTU + density_f2 * (100 - C) as BTU) / 100;
+        let combined_density = (density_f1 * C as BTU + density_f2 * (100 - C) as BTU) / 100;
+
         combined_density
-	}
+    }
 }
 
 // Now, any of our existing energy providers can be used with a mix fuel.
