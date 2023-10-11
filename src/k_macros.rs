@@ -10,12 +10,23 @@
 // values. The macro should be called like follows:
 //
 // let map1: HashMap<u32, u32> = map![1 => 2, 3 => 4, 5 => 6];
+
 #[macro_export]
 macro_rules! map {
-	( $($todo:tt)* ) => {
-		Default::default()
-	};
+    () => {
+        std::collections::HashMap::new()
+    };
+    ( $($key:expr => $value:expr),* $(,)? ) => {
+        {
+            let mut map = std::collections::HashMap::new();
+            $(
+                map.insert($key, $value);
+            )*
+            map
+        }
+    };
 }
+
 
 /// Next, write a macro that implements a `get` function on a type.
 ///
@@ -56,24 +67,35 @@ impl Get<u32> for Seven {
 
 #[macro_export]
 macro_rules! impl_get {
-	( $($todo:tt)* ) => {};
+    ( $($vis:vis $name:ident: $ty:ty = $value:expr;)* ) => {
+        $(
+            $vis struct $name;
+            impl Get<$ty> for $name {
+                fn get() -> $ty {
+                    $value
+                }
+            }
+        )*
+    };
 }
+
 
 /// This function is not graded. It is just for collecting feedback.
 /// On a scale from 0 - 255, with zero being extremely easy and 255 being extremely hard,
 /// how hard did you find this section of the exam.
 pub fn how_hard_was_this_section() -> u8 {
-	todo!()
+	230	
 }
 
 /// This function is not graded. It is just for collecting feedback.
 /// How much time (in hours) did you spend on this section of the exam?
 pub fn how_many_hours_did_you_spend_on_this_section() -> u8 {
-	todo!()
+	3
 }
 
 #[cfg(test)]
 mod tests {
+	use crate::k_macros::Get;
 	use std::collections::HashMap;
 
 	#[test]
@@ -99,9 +121,9 @@ mod tests {
 		);
 
 		// you should be able to make these work.
-		// assert_eq!(Foo::get(), 10);
-		// assert_eq!(Bar::get(), 42);
-		// assert_eq!(Baz::get(), 21);
+		 assert_eq!(Foo::get(), 10);
+		 assert_eq!(Bar::get(), 42);
+		 assert_eq!(Baz::get(), 21);
 
 		// As an extra, ungraded, challenge, try to make this work.
 		// This is not part of the main problem because it requires the nightly compiler.
